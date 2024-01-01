@@ -51,9 +51,6 @@ dependencies {
     implementation "javax.servlet:javax.servlet-api:${servletApiVersion}"
     implementation "javax.validation:validation-api:${validationApiVersion}"
     implementation "javax.annotation:javax.annotation-api:${annotationApiVersion}"
-
-    // Faker
-    implementation "com.github.javafaker:javafaker:${fakerVersion}"
 }
 
 configurations {
