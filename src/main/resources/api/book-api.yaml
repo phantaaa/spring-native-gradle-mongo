@@ -1,0 +1,215 @@
+openapi: 3.0.3
+info:
+  title: Book API
+  description: Services to support book operations
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: me@phanta.dev
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+
+paths:
+  /books:
+    get:
+      tags:
+        - Books
+      summary: Retrieve all books
+      operationId: findBooks
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/order'
+      responses:
+        200:
+          description: Successfully retrieved books
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BookDto'
+    post:
+      tags:
+        - Books
+      summary: Add a new book
+      operationId: addBook
+      requestBody:
+        description: Book object that needs to be added
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookDto'
+        required: true
+      responses:
+        201:
+          description: Book successfully created
+        400:
+          $ref: '#/components/responses/InvalidInput'
+  #        default:
+  #          $ref: '#/components/responses/Error'
+
+  /books/{bookIsbn}:
+    get:
+      tags:
+        - Books
+      summary: Find book by ISBN
+      description: Returns a single book
+      operationId: findBookByIsbn
+      parameters:
+        - $ref: '#/components/parameters/bookIsbn'
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookDto'
+        404:
+          $ref: '#/components/responses/NotFound'
+    #        default:
+    #          $ref: '#/components/responses/Error'
+    patch:
+      tags:
+        - Books
+      summary: Update an existing book
+      operationId: updateBook
+      parameters:
+        - $ref: '#/components/parameters/bookIsbn'
+      requestBody:
+        description: Book object that needs to be updated
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookDto'
+        required: true
+      responses:
+        204:
+          description: Book successfully updated
+        404:
+          $ref: '#/components/responses/NotFound'
+    #        default:
+    #          $ref: '#/components/responses/Error'
+    delete:
+      tags:
+        - Books
+      summary: Delete a book
+      operationId: deleteBook
+      parameters:
+        - $ref: '#/components/parameters/bookIsbn'
+      responses:
+        204:
+          description: Book successfully deleted
+        404:
+          $ref: '#/components/responses/NotFound'
+#        default:
+#          $ref: '#/components/responses/Error'
+
+components:
+
+  responses:
+    Error:
+      description: An error occurred
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InvalidInput:
+      description: Invalid input provided
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  parameters:
+    bookIsbn:
+      name: bookIsbn
+      in: path
+      description: ISBN of the book to fetch
+      required: true
+      schema:
+        type: integer
+        format: int64
+    page:
+      name: page
+      in: query
+      description: Page number for pagination
+      schema:
+        type: integer
+        format: int32
+        default: 0
+    limit:
+      name: limit
+      in: query
+      description: Number of items to retrieve per page
+      schema:
+        type: integer
+        format: int32
+        default: 10
+    sort:
+      name: sort
+      in: query
+      description: Field to sort by
+      schema:
+        type: string
+        default: "isbn"
+    order:
+      name: order
+      in: query
+      description: Sorting order (asc or desc)
+      schema:
+        type: string
+        default: "asc"
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+      required:
+        - message
+    BookId:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique book ID
+      required:
+        - id
+    BookProperties:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Title of the book
+        description:
+          type: string
+          description: Description of the book
+        isbn:
+          type: integer
+          format: int64
+        price:
+          type: integer
+          format: int64
+        available:
+          type: boolean
+      required:
+        - title
+        - description
+        - isbn
+        - price
+        - available
+    BookDto:
+      allOf:
+        - $ref: '#/components/schemas/BookId'
+        - $ref: '#/components/schemas/BookProperties'

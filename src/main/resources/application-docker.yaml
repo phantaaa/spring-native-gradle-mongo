@@ -1,0 +1,14 @@
+spring:
+  data:
+    mongodb:
+      host: books-mongo
+      port: 27017
+      database: books
+      username: root
+      password: example
+      auto-index-creation: true
+
+logging:
+  level:
+    root: info
+    org.mongodb.driver: DEBUG

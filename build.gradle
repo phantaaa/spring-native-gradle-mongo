@@ -1,0 +1,118 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version "${springBootPluginVersion}"
+    id 'io.spring.dependency-management' version "${springDependencyManagementPluginVersion}"
+    id 'org.graalvm.buildtools.native' version "${graalVmBuildToolsPluginVersion}"
+    id 'org.openapi.generator' version "${openApiGeneratorPluginVersion}"
+    id 'checkstyle'
+}
+
+group = 'pl.phanta'
+version = '0.0.1-SNAPSHOT'
+
+def packageBase = "${group}.springnativegradle"
+def mainSourcesDir = "${projectDir}/src/main/java"
+def resourcesDir = "${projectDir}/src/main/resources"
+def spec = "${projectDir}/src/main/resources/api/book-api.yaml"
+def generatedSourcesDir = "${buildDir}/generated/openapi"
+def mainClassName = "SpringBootNativeApplication"
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Spring Boot starters
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // Lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // Test
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    // MapStruct
+    implementation "org.mapstruct:mapstruct:${mapStructVersion}"
+    annotationProcessor "org.mapstruct:mapstruct-processor:${mapStructAnnotationProcessorVersion}"
+
+    // OpenAPI dependencies
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${openApiStarterWebMvcVersion}"
+    implementation "org.openapitools:jackson-databind-nullable:${jacksonNullableVersion}"
+
+    // Required OpenAPI transitive dependencies (avoiding version clashes or missing deps)
+    implementation "javax.servlet:javax.servlet-api:${servletApiVersion}"
+    implementation "javax.validation:validation-api:${validationApiVersion}"
+    implementation "javax.annotation:javax.annotation-api:${annotationApiVersion}"
+
+    // Faker
+    implementation "com.github.javafaker:javafaker:${fakerVersion}"
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir("${generatedSourcesDir}/src/main/java")
+        }
+    }
+}
+
+springBoot {
+    mainClass = "${packageBase}.${mainClassName}"
+}
+
+openApiGenerate {
+    generatorName.set("spring")
+    inputSpec.set(spec)
+    validateSpec.set(true)
+    outputDir.set(generatedSourcesDir)
+    apiPackage.set("${packageBase}.api")
+    invokerPackage.set("${packageBase}")
+    modelPackage.set("${packageBase}.model")
+    configOptions = [
+            "dateLibrary"      : "java11",
+            "delegatePattern"  : "true",
+            'serializableModel': "true",
+            useTags            : "true",
+            configHelp         : "true"
+    ]
+}
+
+checkstyle {
+    toolVersion = '10.12.2'
+    showViolations = true
+    configFile = file("${resourcesDir}/checkstyle/checkstyle.xml")
+}
+
+checkstyleMain {
+    source = mainSourcesDir
+    exclude '**/build/**'
+}
+
+tasks.withType(Checkstyle).configureEach {
+    maxErrors = 0
+    maxWarnings = 0
+}
+
+tasks.named('checkstyleAot').configure {
+    enabled = false
+}
+
+tasks.named('checkstyleTest').configure {
+    enabled = false
+}
+
+compileJava.dependsOn tasks.named("openApiGenerate")

@@ -1,0 +1,30 @@
+name: Pull Request Pipeline
+
+on:
+  pull_request: { }
+
+jobs:
+  pull-request:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code                     # Checkout repository code
+        uses: actions/checkout@v3
+
+      - name: Extract App Name from README.md   # Get app name for artifact name
+        run: |
+          APP_NAME=$(sed -n '/<!-- APP_NAME_START -->/,/<!-- APP_NAME_END -->/p' README.md | grep 'AppName:' | awk '{print $2}')
+          echo "App Name is: $APP_NAME"
+          echo "APP_NAME=$APP_NAME" >> $GITHUB_ENV
+
+      - name: Setup Java Environment            # Setup Java Environment for the build
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Add gradlew Permissions
+        run: chmod +x ./gradlew
+
+      - name: Build Application and run Linters   # Build the application and run Checkstyle
+        run: ./gradlew build --no-daemon

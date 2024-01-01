@@ -1,0 +1,36 @@
+management:
+  endpoint:
+    health:
+      show-details: always
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+spring:
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  jackson:
+    time-zone: UTC
+  data:
+    mongodb:
+      host: localhost
+      port: 27017
+      database: books
+      username: root
+      password: example
+      auto-index-creation: true
+  output:
+    ansi:
+      enabled: ALWAYS
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.thymeleaf.ThymeleafAutoConfiguration
+
+springdoc:
+  show-actuator: false
+
+logging:
+  level:
+    root: debug
